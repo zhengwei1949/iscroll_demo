@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=2, initial-scale=1.0,user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+    *{
+        margin:0;
+        padding:0;
+    }
+    html,body{
+        height:100%;
+    }
+    body{
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+    }
+    header,footer{
+        height: 60px;
+        text-align: center;
+        line-height: 60px;
+        background:orange;
+    }
+    section{
+        -webkit-box-flex: 1;
+        overflow: hidden;
+        text-align: center;
+    }
+    li{
+        background:palegoldenrod;
+        height:100px;
+        border:1px solid red;
+        line-height: 100px;
+    }
+    #toTop{
+        width:50px;
+        height:90px;
+        background:yellow;
+        position: fixed;
+        right:20px;
+        bottom:80px;
+    }
+    </style>
+    <script src="./zepto/zepto.min.js"></script>
+    <script src="./iscroll/iscroll.js"></script>
+    <script>
+        //https://www.kancloud.cn/kancloud/iscroll-api/77899
+        //https://segmentfault.com/q/1010000008489619
+        window.pointerEvent = void 0;
+        let page = 1;//默认第一页
+        let flag = 1;//默认打开上拉加载效果
+        $(function(){
+            var myScroll = new IScroll('section');
+            getData();
+            var pullStart = 0;
+            myScroll.on('scrollStart',function(){
+                pullStart = this.y;
+            });
+            //https://segmentfault.com/q/1010000005742487
+            myScroll.on('scrollEnd',function(){
+                //下拉刷新
+                if(this.directionY == -1 && this.y == pullStart){
+                    console.log('下拉刷新');
+                    page = 1;
+                    $('ul').empty();
+                    getData(1);
+                }
+                if(this.y == this.maxScrollY && (this.directionY == 1)){
+                    if(flag == 0)return;
+                    console.log('上拉加载');
+                    page++;
+                    getData(2);
+                }
+            })
+
+            $('#toTop').on('click',function(){
+                console.log(111)
+                myScroll.scrollTo(0, 0,1000);
+            })
+
+            function getData(type) {
+                $.ajax({
+                    type: 'get',
+                    url: './list.json',
+                    async: true,
+                    success: function (res) {
+                        if(type == 2){
+                            if (!res.list[page]) {
+                                flag = 0;
+                                console.log('没有更多数据了');
+                                return;
+                            }
+                        }
+                        res.list[page].map(item => {
+                            var list = `<li>${item.title}--${item.author}</li>`;
+                            $('ul').append(list);
+                        });
+                        myScroll.refresh()
+                    }
+                });
+            }
+        })
+    </script>
+</head>
+<body>
+    <header>中国内地电影</header>
+    <section>
+        <ul>
+
+        </ul>
+    </section>
+    <footer>
+        看电影 去奥斯卡
+    </footer>
+    <div id="toTop"></div>
+</body>
+</html>
